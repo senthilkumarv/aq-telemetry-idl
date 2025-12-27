@@ -1,0 +1,106 @@
+
+name: IDL Generate, Build, and Publish
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - packages/**
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate code with Thrift (Docker)
+        run: docker run --rm -v "$PWD":/work -w /work ghcr.io/apache/thrift:0.20.0 bash -lc "./scripts/gen-all.sh"
+
+      - name: Upload generated artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-idl
+          path: generated/
+
+  build_rust:
+    runs-on: ubuntu-latest
+    needs: generate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download generated artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-idl
+          path: ./generated
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust crate
+        run: |
+          cd generated/rust || exit 0
+          cargo build --release
+
+  build_swift:
+    runs-on: macos-latest
+    needs: generate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download generated artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-idl
+          path: ./generated
+
+      - name: Build Swift package
+        run: |
+          cd generated/swift || exit 0
+          swift build -c release
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [build_rust, build_swift]
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download generated artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-idl
+          path: ./generated
+
+      - name: Compute next version
+        run: echo "NEXT_VERSION=$(./scripts/versioning.sh)" >> "$GITHUB_ENV"
+
+      - name: Sync packages directory
+        run: ./scripts/sync-packages.sh "$NEXT_VERSION"
+
+      - name: Commit generated packages
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packages/
+          git commit -m "chore(release): v$NEXT_VERSION - generated packages [skip ci]" || echo "No changes to commit"
+
+      - name: Tag and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git tag -d "v$NEXT_VERSION" >/dev/null 2>&1 || true
+          git tag -a "v$NEXT_VERSION" -m "Release v$NEXT_VERSION"
+          git push origin HEAD:${{ github.ref_name }}
+          git push origin --tags
