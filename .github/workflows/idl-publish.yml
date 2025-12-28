@@ -18,12 +18,29 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Thrift compiler (apt)
+      - name: Install Thrift compiler (prefer Homebrew; fallback apt)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y thrift-compiler
+          set -eo pipefail
+          if ! command -v thrift >/dev/null 2>&1; then
+            if command -v brew >/dev/null 2>&1; then
+              brew update || true
+              brew install thrift || brew upgrade thrift || true
+            else
+              NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || true
+              if [ -d /home/linuxbrew/.linuxbrew/bin ]; then
+                echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
+                echo "/home/linuxbrew/.linuxbrew/sbin" >> "$GITHUB_PATH"
+                eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+                brew update || true
+                brew install thrift || brew upgrade thrift || true
+              fi
+            fi
+          fi
+          if ! command -v thrift >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y thrift-compiler
+          fi
           thrift -version
-
       - name: Generate code
         run: ./scripts/gen-all.sh
 
