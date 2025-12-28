@@ -4,7 +4,6 @@ Shared Thrift IDL and generated packages for Rust and Swift.
 
 - idl/telemetry.thrift
 - scripts/
-- generated/ (ignored)
 - packages/ (tracked outputs)
 
 Local codegen: run scripts/gen-all.sh
