@@ -18,29 +18,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Thrift compiler (prefer Homebrew; fallback apt)
-        run: |
-          set -eo pipefail
-          if ! command -v thrift >/dev/null 2>&1; then
-            if command -v brew >/dev/null 2>&1; then
-              brew update || true
-              brew install thrift || brew upgrade thrift || true
-            else
-              NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || true
-              if [ -d /home/linuxbrew/.linuxbrew/bin ]; then
-                echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
-                echo "/home/linuxbrew/.linuxbrew/sbin" >> "$GITHUB_PATH"
-                eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-                brew update || true
-                brew install thrift || brew upgrade thrift || true
-              fi
-            fi
-          fi
-          if ! command -v thrift >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y thrift-compiler
-          fi
-          thrift -version
+      - name: Install Thrift compiler (Linux)
+        run: ./scripts/setup_thrift_linux.sh
+
       - name: Generate code
         run: ./scripts/gen-all.sh
 
@@ -84,10 +64,8 @@ jobs:
           name: generated-idl
           path: ./generated
 
-      - name: Install Thrift compiler (brew)
-        run: |
-          brew install thrift
-          thrift -version
+      - name: Install Thrift compiler (macOS)
+        run: ./scripts/setup_thrift_macos.sh
 
       - name: Build Swift package
         run: |
@@ -116,26 +94,7 @@ jobs:
         run: ./scripts/sync-packages.sh "$NEXT_VERSION"
 
       - name: Bump Cargo.toml version
-        run: |
-          if [ -f packages/rust/Cargo.toml ]; then
-            python3 - <<PY2
-import os, io, re, sys
-ver=os.environ.get(NEXT_VERSION,).strip()
-p=packages/rust/Cargo.toml
-try:
-    t=io.open(p,r,encoding=utf-8).read()
-except FileNotFoundError:
-    sys.exit(0)
-lines=t.splitlines(); out=[]; inpkg=False
-for line in lines:
-    if re.match(rs*[package]s*, line):
-        inpkg=True; out.append(line); continue
-    if re.match(rs*[.*]s*, line) and not re.match(rs*[package]s*, line):
-        inpkg=False
-    out.append(f"version = "{ver}"" if inpkg and re.match(rs*versions*=s*", line) else line)
-io.open(p,w,encoding=utf-8).write("\n".join(out)+"\n")
-PY2
-          fi
+        run: python3 scripts/bump_cargo_version.py "$NEXT_VERSION"
 
       - name: Commit generated packages
         run: |
