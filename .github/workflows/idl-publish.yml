@@ -18,8 +18,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate code with Thrift (Docker Hub latest)
-        run: docker run --rm -v "$PWD":/work -w /work docker.io/khaledez/thrift:latest sh -lc "./scripts/gen-all.sh"
+      - name: Install Thrift compiler (apt)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y thrift-compiler
+          thrift -version
+
+      - name: Generate code
+        run: ./scripts/gen-all.sh
 
       - name: Upload generated artifact
         uses: actions/upload-artifact@v4
@@ -60,6 +66,11 @@ jobs:
         with:
           name: generated-idl
           path: ./generated
+
+      - name: Install Thrift compiler (brew)
+        run: |
+          brew install thrift
+          thrift -version
 
       - name: Build Swift package
         run: |
