@@ -545,6 +545,657 @@ extension SDPage : TStruct {
 
 
 
+public func ==(lhs: TileSkeleton, rhs: TileSkeleton) -> Bool {
+  return
+    (lhs.id == rhs.id) &&
+    (lhs.title == rhs.title) &&
+    (lhs.unit == rhs.unit) &&
+    (lhs.precision == rhs.precision)
+}
+
+extension TileSkeleton : CustomStringConvertible {
+
+  public var description : String {
+    var desc = "TileSkeleton("
+    desc += "id=\(String(describing: self.id)), "
+    desc += "title=\(String(describing: self.title)), "
+    desc += "unit=\(String(describing: self.unit)), "
+    desc += "precision=\(String(describing: self.precision))"
+    return desc
+  }
+
+}
+
+extension TileSkeleton : Hashable {
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+    hasher.combine(title)
+    hasher.combine(unit)
+    hasher.combine(precision)
+  }
+
+}
+
+extension TileSkeleton : TStruct {
+
+  public static var fieldIds: [String: Int32] {
+    return ["id": 1, "title": 2, "unit": 3, "precision": 4, ]
+  }
+
+  public static var structName: String { return "TileSkeleton" }
+
+  public static func read(from proto: TProtocol) throws -> TileSkeleton {
+    _ = try proto.readStructBegin()
+    var id: String!
+    var title: String!
+    var unit: String?
+    var precision: Int32?
+
+    fields: while true {
+
+      let (_, fieldType, fieldID) = try proto.readFieldBegin()
+
+      switch (fieldID, fieldType) {
+        case (_, .stop):            break fields
+        case (1, .string):           id = try String.read(from: proto)
+        case (2, .string):           title = try String.read(from: proto)
+        case (3, .string):           unit = try String.read(from: proto)
+        case (4, .i32):             precision = try Int32.read(from: proto)
+        case let (_, unknownType):  try proto.skip(type: unknownType)
+      }
+
+      try proto.readFieldEnd()
+    }
+
+    try proto.readStructEnd()
+    // Required fields
+    try proto.validateValue(id, named: "id")
+    try proto.validateValue(title, named: "title")
+
+    return TileSkeleton(id: id, title: title, unit: unit, precision: precision)
+  }
+
+}
+
+
+
+public func ==(lhs: SeriesSkeleton, rhs: SeriesSkeleton) -> Bool {
+  return
+    (lhs.id == rhs.id) &&
+    (lhs.name == rhs.name) &&
+    (lhs.color == rhs.color)
+}
+
+extension SeriesSkeleton : CustomStringConvertible {
+
+  public var description : String {
+    var desc = "SeriesSkeleton("
+    desc += "id=\(String(describing: self.id)), "
+    desc += "name=\(String(describing: self.name)), "
+    desc += "color=\(String(describing: self.color))"
+    return desc
+  }
+
+}
+
+extension SeriesSkeleton : Hashable {
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+    hasher.combine(name)
+    hasher.combine(color)
+  }
+
+}
+
+extension SeriesSkeleton : TStruct {
+
+  public static var fieldIds: [String: Int32] {
+    return ["id": 1, "name": 2, "color": 3, ]
+  }
+
+  public static var structName: String { return "SeriesSkeleton" }
+
+  public static func read(from proto: TProtocol) throws -> SeriesSkeleton {
+    _ = try proto.readStructBegin()
+    var id: String!
+    var name: String!
+    var color: String?
+
+    fields: while true {
+
+      let (_, fieldType, fieldID) = try proto.readFieldBegin()
+
+      switch (fieldID, fieldType) {
+        case (_, .stop):            break fields
+        case (1, .string):           id = try String.read(from: proto)
+        case (2, .string):           name = try String.read(from: proto)
+        case (3, .string):           color = try String.read(from: proto)
+        case let (_, unknownType):  try proto.skip(type: unknownType)
+      }
+
+      try proto.readFieldEnd()
+    }
+
+    try proto.readStructEnd()
+    // Required fields
+    try proto.validateValue(id, named: "id")
+    try proto.validateValue(name, named: "name")
+
+    return SeriesSkeleton(id: id, name: name, color: color)
+  }
+
+}
+
+
+
+public func ==(lhs: ChartSkeleton, rhs: ChartSkeleton) -> Bool {
+  return
+    (lhs.id == rhs.id) &&
+    (lhs.title == rhs.title) &&
+    (lhs.unit == rhs.unit) &&
+    (lhs.kind == rhs.kind) &&
+    (lhs.yMin == rhs.yMin) &&
+    (lhs.yMax == rhs.yMax) &&
+    (lhs.fractionDigits == rhs.fractionDigits) &&
+    (lhs.series == rhs.series)
+}
+
+extension ChartSkeleton : CustomStringConvertible {
+
+  public var description : String {
+    var desc = "ChartSkeleton("
+    desc += "id=\(String(describing: self.id)), "
+    desc += "title=\(String(describing: self.title)), "
+    desc += "unit=\(String(describing: self.unit)), "
+    desc += "kind=\(String(describing: self.kind)), "
+    desc += "yMin=\(String(describing: self.yMin)), "
+    desc += "yMax=\(String(describing: self.yMax)), "
+    desc += "fractionDigits=\(String(describing: self.fractionDigits)), "
+    desc += "series=\(String(describing: self.series))"
+    return desc
+  }
+
+}
+
+extension ChartSkeleton : Hashable {
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+    hasher.combine(title)
+    hasher.combine(unit)
+    hasher.combine(kind)
+    hasher.combine(yMin)
+    hasher.combine(yMax)
+    hasher.combine(fractionDigits)
+    hasher.combine(series)
+  }
+
+}
+
+extension ChartSkeleton : TStruct {
+
+  public static var fieldIds: [String: Int32] {
+    return ["id": 1, "title": 2, "unit": 3, "kind": 4, "yMin": 5, "yMax": 6, "fractionDigits": 7, "series": 8, ]
+  }
+
+  public static var structName: String { return "ChartSkeleton" }
+
+  public static func read(from proto: TProtocol) throws -> ChartSkeleton {
+    _ = try proto.readStructBegin()
+    var id: String!
+    var title: String!
+    var unit: String?
+    var kind: ChartKind!
+    var yMin: Double?
+    var yMax: Double?
+    var fractionDigits: Int32?
+    var series: TList<SeriesSkeleton>!
+
+    fields: while true {
+
+      let (_, fieldType, fieldID) = try proto.readFieldBegin()
+
+      switch (fieldID, fieldType) {
+        case (_, .stop):            break fields
+        case (1, .string):           id = try String.read(from: proto)
+        case (2, .string):           title = try String.read(from: proto)
+        case (3, .string):           unit = try String.read(from: proto)
+        case (4, .i32):             kind = try ChartKind.read(from: proto)
+        case (5, .double):           yMin = try Double.read(from: proto)
+        case (6, .double):           yMax = try Double.read(from: proto)
+        case (7, .i32):             fractionDigits = try Int32.read(from: proto)
+        case (8, .list):            series = try TList<SeriesSkeleton>.read(from: proto)
+        case let (_, unknownType):  try proto.skip(type: unknownType)
+      }
+
+      try proto.readFieldEnd()
+    }
+
+    try proto.readStructEnd()
+    // Required fields
+    try proto.validateValue(id, named: "id")
+    try proto.validateValue(title, named: "title")
+    try proto.validateValue(kind, named: "kind")
+    try proto.validateValue(series, named: "series")
+
+    return ChartSkeleton(id: id, title: title, unit: unit, kind: kind, yMin: yMin, yMax: yMax, fractionDigits: fractionDigits, series: series)
+  }
+
+}
+
+
+
+public func ==(lhs: DashboardSkeleton, rhs: DashboardSkeleton) -> Bool {
+  return
+    (lhs.aquariumId == rhs.aquariumId) &&
+    (lhs.tiles == rhs.tiles) &&
+    (lhs.charts == rhs.charts)
+}
+
+extension DashboardSkeleton : CustomStringConvertible {
+
+  public var description : String {
+    var desc = "DashboardSkeleton("
+    desc += "aquariumId=\(String(describing: self.aquariumId)), "
+    desc += "tiles=\(String(describing: self.tiles)), "
+    desc += "charts=\(String(describing: self.charts))"
+    return desc
+  }
+
+}
+
+extension DashboardSkeleton : Hashable {
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(aquariumId)
+    hasher.combine(tiles)
+    hasher.combine(charts)
+  }
+
+}
+
+extension DashboardSkeleton : TStruct {
+
+  public static var fieldIds: [String: Int32] {
+    return ["aquariumId": 1, "tiles": 2, "charts": 3, ]
+  }
+
+  public static var structName: String { return "DashboardSkeleton" }
+
+  public static func read(from proto: TProtocol) throws -> DashboardSkeleton {
+    _ = try proto.readStructBegin()
+    var aquariumId: String!
+    var tiles: TList<TileSkeleton>!
+    var charts: TList<ChartSkeleton>!
+
+    fields: while true {
+
+      let (_, fieldType, fieldID) = try proto.readFieldBegin()
+
+      switch (fieldID, fieldType) {
+        case (_, .stop):            break fields
+        case (1, .string):           aquariumId = try String.read(from: proto)
+        case (2, .list):            tiles = try TList<TileSkeleton>.read(from: proto)
+        case (3, .list):            charts = try TList<ChartSkeleton>.read(from: proto)
+        case let (_, unknownType):  try proto.skip(type: unknownType)
+      }
+
+      try proto.readFieldEnd()
+    }
+
+    try proto.readStructEnd()
+    // Required fields
+    try proto.validateValue(aquariumId, named: "aquariumId")
+    try proto.validateValue(tiles, named: "tiles")
+    try proto.validateValue(charts, named: "charts")
+
+    return DashboardSkeleton(aquariumId: aquariumId, tiles: tiles, charts: charts)
+  }
+
+}
+
+
+
+public func ==(lhs: TileUpdate, rhs: TileUpdate) -> Bool {
+  return
+    (lhs.id == rhs.id) &&
+    (lhs.value == rhs.value)
+}
+
+extension TileUpdate : CustomStringConvertible {
+
+  public var description : String {
+    var desc = "TileUpdate("
+    desc += "id=\(String(describing: self.id)), "
+    desc += "value=\(String(describing: self.value))"
+    return desc
+  }
+
+}
+
+extension TileUpdate : Hashable {
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+    hasher.combine(value)
+  }
+
+}
+
+extension TileUpdate : TStruct {
+
+  public static var fieldIds: [String: Int32] {
+    return ["id": 1, "value": 2, ]
+  }
+
+  public static var structName: String { return "TileUpdate" }
+
+  public static func read(from proto: TProtocol) throws -> TileUpdate {
+    _ = try proto.readStructBegin()
+    var id: String!
+    var value: Double?
+
+    fields: while true {
+
+      let (_, fieldType, fieldID) = try proto.readFieldBegin()
+
+      switch (fieldID, fieldType) {
+        case (_, .stop):            break fields
+        case (1, .string):           id = try String.read(from: proto)
+        case (2, .double):           value = try Double.read(from: proto)
+        case let (_, unknownType):  try proto.skip(type: unknownType)
+      }
+
+      try proto.readFieldEnd()
+    }
+
+    try proto.readStructEnd()
+    // Required fields
+    try proto.validateValue(id, named: "id")
+
+    return TileUpdate(id: id, value: value)
+  }
+
+}
+
+
+
+public func ==(lhs: SeriesUpdate, rhs: SeriesUpdate) -> Bool {
+  return
+    (lhs.id == rhs.id) &&
+    (lhs.points == rhs.points)
+}
+
+extension SeriesUpdate : CustomStringConvertible {
+
+  public var description : String {
+    var desc = "SeriesUpdate("
+    desc += "id=\(String(describing: self.id)), "
+    desc += "points=\(String(describing: self.points))"
+    return desc
+  }
+
+}
+
+extension SeriesUpdate : Hashable {
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+    hasher.combine(points)
+  }
+
+}
+
+extension SeriesUpdate : TStruct {
+
+  public static var fieldIds: [String: Int32] {
+    return ["id": 1, "points": 2, ]
+  }
+
+  public static var structName: String { return "SeriesUpdate" }
+
+  public static func read(from proto: TProtocol) throws -> SeriesUpdate {
+    _ = try proto.readStructBegin()
+    var id: String!
+    var points: TList<SDPoint>!
+
+    fields: while true {
+
+      let (_, fieldType, fieldID) = try proto.readFieldBegin()
+
+      switch (fieldID, fieldType) {
+        case (_, .stop):            break fields
+        case (1, .string):           id = try String.read(from: proto)
+        case (2, .list):            points = try TList<SDPoint>.read(from: proto)
+        case let (_, unknownType):  try proto.skip(type: unknownType)
+      }
+
+      try proto.readFieldEnd()
+    }
+
+    try proto.readStructEnd()
+    // Required fields
+    try proto.validateValue(id, named: "id")
+    try proto.validateValue(points, named: "points")
+
+    return SeriesUpdate(id: id, points: points)
+  }
+
+}
+
+
+
+public func ==(lhs: ChartUpdate, rhs: ChartUpdate) -> Bool {
+  return
+    (lhs.id == rhs.id) &&
+    (lhs.series == rhs.series)
+}
+
+extension ChartUpdate : CustomStringConvertible {
+
+  public var description : String {
+    var desc = "ChartUpdate("
+    desc += "id=\(String(describing: self.id)), "
+    desc += "series=\(String(describing: self.series))"
+    return desc
+  }
+
+}
+
+extension ChartUpdate : Hashable {
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+    hasher.combine(series)
+  }
+
+}
+
+extension ChartUpdate : TStruct {
+
+  public static var fieldIds: [String: Int32] {
+    return ["id": 1, "series": 2, ]
+  }
+
+  public static var structName: String { return "ChartUpdate" }
+
+  public static func read(from proto: TProtocol) throws -> ChartUpdate {
+    _ = try proto.readStructBegin()
+    var id: String!
+    var series: TList<SeriesUpdate>!
+
+    fields: while true {
+
+      let (_, fieldType, fieldID) = try proto.readFieldBegin()
+
+      switch (fieldID, fieldType) {
+        case (_, .stop):            break fields
+        case (1, .string):           id = try String.read(from: proto)
+        case (2, .list):            series = try TList<SeriesUpdate>.read(from: proto)
+        case let (_, unknownType):  try proto.skip(type: unknownType)
+      }
+
+      try proto.readFieldEnd()
+    }
+
+    try proto.readStructEnd()
+    // Required fields
+    try proto.validateValue(id, named: "id")
+    try proto.validateValue(series, named: "series")
+
+    return ChartUpdate(id: id, series: series)
+  }
+
+}
+
+
+
+public func ==(lhs: CompletionEvent, rhs: CompletionEvent) -> Bool {
+  return
+    (lhs.totalWidgets == rhs.totalWidgets) &&
+    (lhs.durationMs == rhs.durationMs)
+}
+
+extension CompletionEvent : CustomStringConvertible {
+
+  public var description : String {
+    var desc = "CompletionEvent("
+    desc += "totalWidgets=\(String(describing: self.totalWidgets)), "
+    desc += "durationMs=\(String(describing: self.durationMs))"
+    return desc
+  }
+
+}
+
+extension CompletionEvent : Hashable {
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(totalWidgets)
+    hasher.combine(durationMs)
+  }
+
+}
+
+extension CompletionEvent : TStruct {
+
+  public static var fieldIds: [String: Int32] {
+    return ["totalWidgets": 1, "durationMs": 2, ]
+  }
+
+  public static var structName: String { return "CompletionEvent" }
+
+  public static func read(from proto: TProtocol) throws -> CompletionEvent {
+    _ = try proto.readStructBegin()
+    var totalWidgets: Int32!
+    var durationMs: Int64!
+
+    fields: while true {
+
+      let (_, fieldType, fieldID) = try proto.readFieldBegin()
+
+      switch (fieldID, fieldType) {
+        case (_, .stop):            break fields
+        case (1, .i32):             totalWidgets = try Int32.read(from: proto)
+        case (2, .i64):             durationMs = try Int64.read(from: proto)
+        case let (_, unknownType):  try proto.skip(type: unknownType)
+      }
+
+      try proto.readFieldEnd()
+    }
+
+    try proto.readStructEnd()
+    // Required fields
+    try proto.validateValue(totalWidgets, named: "totalWidgets")
+    try proto.validateValue(durationMs, named: "durationMs")
+
+    return CompletionEvent(totalWidgets: totalWidgets, durationMs: durationMs)
+  }
+
+}
+
+
+
+public func ==(lhs: StreamMessage, rhs: StreamMessage) -> Bool {
+  return
+    (lhs.type == rhs.type) &&
+    (lhs.skeleton == rhs.skeleton) &&
+    (lhs.tileUpdate == rhs.tileUpdate) &&
+    (lhs.chartUpdate == rhs.chartUpdate) &&
+    (lhs.complete == rhs.complete)
+}
+
+extension StreamMessage : CustomStringConvertible {
+
+  public var description : String {
+    var desc = "StreamMessage("
+    desc += "type=\(String(describing: self.type)), "
+    desc += "skeleton=\(String(describing: self.skeleton)), "
+    desc += "tileUpdate=\(String(describing: self.tileUpdate)), "
+    desc += "chartUpdate=\(String(describing: self.chartUpdate)), "
+    desc += "complete=\(String(describing: self.complete))"
+    return desc
+  }
+
+}
+
+extension StreamMessage : Hashable {
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(type)
+    hasher.combine(skeleton)
+    hasher.combine(tileUpdate)
+    hasher.combine(chartUpdate)
+    hasher.combine(complete)
+  }
+
+}
+
+extension StreamMessage : TStruct {
+
+  public static var fieldIds: [String: Int32] {
+    return ["type": 1, "skeleton": 2, "tileUpdate": 3, "chartUpdate": 4, "complete": 5, ]
+  }
+
+  public static var structName: String { return "StreamMessage" }
+
+  public static func read(from proto: TProtocol) throws -> StreamMessage {
+    _ = try proto.readStructBegin()
+    var type: StreamMessageType!
+    var skeleton: DashboardSkeleton?
+    var tileUpdate: TileUpdate?
+    var chartUpdate: ChartUpdate?
+    var complete: CompletionEvent?
+
+    fields: while true {
+
+      let (_, fieldType, fieldID) = try proto.readFieldBegin()
+
+      switch (fieldID, fieldType) {
+        case (_, .stop):            break fields
+        case (1, .i32):             type = try StreamMessageType.read(from: proto)
+        case (2, .struct):           skeleton = try DashboardSkeleton.read(from: proto)
+        case (3, .struct):           tileUpdate = try TileUpdate.read(from: proto)
+        case (4, .struct):           chartUpdate = try ChartUpdate.read(from: proto)
+        case (5, .struct):           complete = try CompletionEvent.read(from: proto)
+        case let (_, unknownType):  try proto.skip(type: unknownType)
+      }
+
+      try proto.readFieldEnd()
+    }
+
+    try proto.readStructEnd()
+    // Required fields
+    try proto.validateValue(type, named: "type")
+
+    return StreamMessage(type: type, skeleton: skeleton, tileUpdate: tileUpdate, chartUpdate: chartUpdate, complete: complete)
+  }
+
+}
+
+
+
 fileprivate final class TelemetryService_Aquariums_args {
 
 

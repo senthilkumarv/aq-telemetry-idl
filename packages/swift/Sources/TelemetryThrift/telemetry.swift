@@ -45,6 +45,47 @@ public enum ChartKind : TEnum {
   }
 }
 
+public enum StreamMessageType : TEnum {
+  case skeleton
+  case tile_update
+  case chart_update
+  case complete
+
+  public static func read(from proto: TProtocol) throws -> StreamMessageType {
+    let raw: Int32 = try proto.read()
+    let new = StreamMessageType(rawValue: raw)
+    if let unwrapped = new {
+      return unwrapped
+    } else {
+      throw TProtocolError(error: .invalidData,
+                           message: "Invalid enum value (\(raw)) for \(StreamMessageType.self)")
+    }
+  }
+
+  public init() {
+    self = .skeleton
+  }
+
+  public var rawValue: Int32 {
+    switch self {
+    case .skeleton: return 1
+    case .tile_update: return 2
+    case .chart_update: return 3
+    case .complete: return 4
+    }
+  }
+
+  public init?(rawValue: Int32) {
+    switch rawValue {
+    case 1: self = .skeleton
+    case 2: self = .tile_update
+    case 3: self = .chart_update
+    case 4: self = .complete
+    default: return nil
+    }
+  }
+}
+
 public typealias TimestampMs = Int64
 
 public final class SDAquarium {
@@ -216,6 +257,196 @@ public final class SDPage {
     self.tiles = tiles
     self.charts = charts
     self.overlays = overlays
+  }
+
+}
+
+public final class TileSkeleton {
+
+  public var id: String
+
+  public var title: String
+
+  public var unit: String?
+
+  public var precision: Int32?
+
+
+  public init(id: String, title: String) {
+    self.id = id
+    self.title = title
+  }
+
+  public init(id: String, title: String, unit: String?, precision: Int32?) {
+    self.id = id
+    self.title = title
+    self.unit = unit
+    self.precision = precision
+  }
+
+}
+
+public final class SeriesSkeleton {
+
+  public var id: String
+
+  public var name: String
+
+  public var color: String?
+
+
+  public init(id: String, name: String) {
+    self.id = id
+    self.name = name
+  }
+
+  public init(id: String, name: String, color: String?) {
+    self.id = id
+    self.name = name
+    self.color = color
+  }
+
+}
+
+public final class ChartSkeleton {
+
+  public var id: String
+
+  public var title: String
+
+  public var unit: String?
+
+  public var kind: ChartKind
+
+  public var yMin: Double?
+
+  public var yMax: Double?
+
+  public var fractionDigits: Int32?
+
+  public var series: TList<SeriesSkeleton>
+
+
+  public init(id: String, title: String, kind: ChartKind, series: TList<SeriesSkeleton>) {
+    self.id = id
+    self.title = title
+    self.kind = kind
+    self.series = series
+  }
+
+  public init(id: String, title: String, unit: String?, kind: ChartKind, yMin: Double?, yMax: Double?, fractionDigits: Int32?, series: TList<SeriesSkeleton>) {
+    self.id = id
+    self.title = title
+    self.unit = unit
+    self.kind = kind
+    self.yMin = yMin
+    self.yMax = yMax
+    self.fractionDigits = fractionDigits
+    self.series = series
+  }
+
+}
+
+public final class DashboardSkeleton {
+
+  public var aquariumId: String
+
+  public var tiles: TList<TileSkeleton>
+
+  public var charts: TList<ChartSkeleton>
+
+
+  public init(aquariumId: String, tiles: TList<TileSkeleton>, charts: TList<ChartSkeleton>) {
+    self.aquariumId = aquariumId
+    self.tiles = tiles
+    self.charts = charts
+  }
+
+}
+
+public final class TileUpdate {
+
+  public var id: String
+
+  public var value: Double?
+
+
+  public init(id: String) {
+    self.id = id
+  }
+
+  public init(id: String, value: Double?) {
+    self.id = id
+    self.value = value
+  }
+
+}
+
+public final class SeriesUpdate {
+
+  public var id: String
+
+  public var points: TList<SDPoint>
+
+
+  public init(id: String, points: TList<SDPoint>) {
+    self.id = id
+    self.points = points
+  }
+
+}
+
+public final class ChartUpdate {
+
+  public var id: String
+
+  public var series: TList<SeriesUpdate>
+
+
+  public init(id: String, series: TList<SeriesUpdate>) {
+    self.id = id
+    self.series = series
+  }
+
+}
+
+public final class CompletionEvent {
+
+  public var totalWidgets: Int32
+
+  public var durationMs: Int64
+
+
+  public init(totalWidgets: Int32, durationMs: Int64) {
+    self.totalWidgets = totalWidgets
+    self.durationMs = durationMs
+  }
+
+}
+
+public final class StreamMessage {
+
+  public var type: StreamMessageType
+
+  public var skeleton: DashboardSkeleton?
+
+  public var tileUpdate: TileUpdate?
+
+  public var chartUpdate: ChartUpdate?
+
+  public var complete: CompletionEvent?
+
+
+  public init(type: StreamMessageType) {
+    self.type = type
+  }
+
+  public init(type: StreamMessageType, skeleton: DashboardSkeleton?, tileUpdate: TileUpdate?, chartUpdate: ChartUpdate?, complete: CompletionEvent?) {
+    self.type = type
+    self.skeleton = skeleton
+    self.tileUpdate = tileUpdate
+    self.chartUpdate = chartUpdate
+    self.complete = complete
   }
 
 }

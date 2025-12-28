@@ -77,6 +77,63 @@ impl From<&ChartKind> for i32 {
   }
 }
 
+#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct StreamMessageType(pub i32);
+
+impl StreamMessageType {
+  pub const SKELETON: StreamMessageType = StreamMessageType(1);
+  pub const TILE_UPDATE: StreamMessageType = StreamMessageType(2);
+  pub const CHART_UPDATE: StreamMessageType = StreamMessageType(3);
+  pub const COMPLETE: StreamMessageType = StreamMessageType(4);
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::SKELETON,
+    Self::TILE_UPDATE,
+    Self::CHART_UPDATE,
+    Self::COMPLETE,
+  ];
+}
+
+impl TSerializable for StreamMessageType {
+  #[allow(clippy::trivially_copy_pass_by_ref)]
+  fn write_to_out_protocol(&self, o_prot: &mut dyn TOutputProtocol) -> thrift::Result<()> {
+    o_prot.write_i32(self.0)
+  }
+  fn read_from_in_protocol(i_prot: &mut dyn TInputProtocol) -> thrift::Result<StreamMessageType> {
+    let enum_value = i_prot.read_i32()?;
+    Ok(StreamMessageType::from(enum_value))
+  }
+}
+
+impl From<i32> for StreamMessageType {
+  fn from(i: i32) -> Self {
+    match i {
+      1 => StreamMessageType::SKELETON,
+      2 => StreamMessageType::TILE_UPDATE,
+      3 => StreamMessageType::CHART_UPDATE,
+      4 => StreamMessageType::COMPLETE,
+      _ => StreamMessageType(i)
+    }
+  }
+}
+
+impl From<&i32> for StreamMessageType {
+  fn from(i: &i32) -> Self {
+    StreamMessageType::from(*i)
+  }
+}
+
+impl From<StreamMessageType> for i32 {
+  fn from(e: StreamMessageType) -> i32 {
+    e.0
+  }
+}
+
+impl From<&StreamMessageType> for i32 {
+  fn from(e: &StreamMessageType) -> i32 {
+    e.0
+  }
+}
+
 pub type TimestampMs = i64;
 
 //
@@ -825,6 +882,855 @@ impl TSerializable for SDPage {
 }
 
 //
+// TileSkeleton
+//
+
+#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct TileSkeleton {
+  pub id: Option<String>,
+  pub title: Option<String>,
+  pub unit: Option<String>,
+  pub precision: Option<i32>,
+}
+
+impl TileSkeleton {
+  pub fn new<F1, F2, F3, F4>(id: F1, title: F2, unit: F3, precision: F4) -> TileSkeleton where F1: Into<Option<String>>, F2: Into<Option<String>>, F3: Into<Option<String>>, F4: Into<Option<i32>> {
+    TileSkeleton {
+      id: id.into(),
+      title: title.into(),
+      unit: unit.into(),
+      precision: precision.into(),
+    }
+  }
+}
+
+impl TSerializable for TileSkeleton {
+  fn read_from_in_protocol(i_prot: &mut dyn TInputProtocol) -> thrift::Result<TileSkeleton> {
+    i_prot.read_struct_begin()?;
+    let mut f_1: Option<String> = Some("".to_owned());
+    let mut f_2: Option<String> = Some("".to_owned());
+    let mut f_3: Option<String> = None;
+    let mut f_4: Option<i32> = None;
+    loop {
+      let field_ident = i_prot.read_field_begin()?;
+      if field_ident.field_type == TType::Stop {
+        break;
+      }
+      let field_id = field_id(&field_ident)?;
+      match field_id {
+        1 => {
+          let val = i_prot.read_string()?;
+          f_1 = Some(val);
+        },
+        2 => {
+          let val = i_prot.read_string()?;
+          f_2 = Some(val);
+        },
+        3 => {
+          let val = i_prot.read_string()?;
+          f_3 = Some(val);
+        },
+        4 => {
+          let val = i_prot.read_i32()?;
+          f_4 = Some(val);
+        },
+        _ => {
+          i_prot.skip(field_ident.field_type)?;
+        },
+      };
+      i_prot.read_field_end()?;
+    }
+    i_prot.read_struct_end()?;
+    let ret = TileSkeleton {
+      id: f_1,
+      title: f_2,
+      unit: f_3,
+      precision: f_4,
+    };
+    Ok(ret)
+  }
+  fn write_to_out_protocol(&self, o_prot: &mut dyn TOutputProtocol) -> thrift::Result<()> {
+    let struct_ident = TStructIdentifier::new("TileSkeleton");
+    o_prot.write_struct_begin(&struct_ident)?;
+    if let Some(ref fld_var) = self.id {
+      o_prot.write_field_begin(&TFieldIdentifier::new("id", TType::String, 1))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.title {
+      o_prot.write_field_begin(&TFieldIdentifier::new("title", TType::String, 2))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.unit {
+      o_prot.write_field_begin(&TFieldIdentifier::new("unit", TType::String, 3))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(fld_var) = self.precision {
+      o_prot.write_field_begin(&TFieldIdentifier::new("precision", TType::I32, 4))?;
+      o_prot.write_i32(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    o_prot.write_field_stop()?;
+    o_prot.write_struct_end()
+  }
+}
+
+//
+// SeriesSkeleton
+//
+
+#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct SeriesSkeleton {
+  pub id: Option<String>,
+  pub name: Option<String>,
+  pub color: Option<String>,
+}
+
+impl SeriesSkeleton {
+  pub fn new<F1, F2, F3>(id: F1, name: F2, color: F3) -> SeriesSkeleton where F1: Into<Option<String>>, F2: Into<Option<String>>, F3: Into<Option<String>> {
+    SeriesSkeleton {
+      id: id.into(),
+      name: name.into(),
+      color: color.into(),
+    }
+  }
+}
+
+impl TSerializable for SeriesSkeleton {
+  fn read_from_in_protocol(i_prot: &mut dyn TInputProtocol) -> thrift::Result<SeriesSkeleton> {
+    i_prot.read_struct_begin()?;
+    let mut f_1: Option<String> = Some("".to_owned());
+    let mut f_2: Option<String> = Some("".to_owned());
+    let mut f_3: Option<String> = None;
+    loop {
+      let field_ident = i_prot.read_field_begin()?;
+      if field_ident.field_type == TType::Stop {
+        break;
+      }
+      let field_id = field_id(&field_ident)?;
+      match field_id {
+        1 => {
+          let val = i_prot.read_string()?;
+          f_1 = Some(val);
+        },
+        2 => {
+          let val = i_prot.read_string()?;
+          f_2 = Some(val);
+        },
+        3 => {
+          let val = i_prot.read_string()?;
+          f_3 = Some(val);
+        },
+        _ => {
+          i_prot.skip(field_ident.field_type)?;
+        },
+      };
+      i_prot.read_field_end()?;
+    }
+    i_prot.read_struct_end()?;
+    let ret = SeriesSkeleton {
+      id: f_1,
+      name: f_2,
+      color: f_3,
+    };
+    Ok(ret)
+  }
+  fn write_to_out_protocol(&self, o_prot: &mut dyn TOutputProtocol) -> thrift::Result<()> {
+    let struct_ident = TStructIdentifier::new("SeriesSkeleton");
+    o_prot.write_struct_begin(&struct_ident)?;
+    if let Some(ref fld_var) = self.id {
+      o_prot.write_field_begin(&TFieldIdentifier::new("id", TType::String, 1))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.name {
+      o_prot.write_field_begin(&TFieldIdentifier::new("name", TType::String, 2))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.color {
+      o_prot.write_field_begin(&TFieldIdentifier::new("color", TType::String, 3))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    o_prot.write_field_stop()?;
+    o_prot.write_struct_end()
+  }
+}
+
+//
+// ChartSkeleton
+//
+
+#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct ChartSkeleton {
+  pub id: Option<String>,
+  pub title: Option<String>,
+  pub unit: Option<String>,
+  pub kind: Option<ChartKind>,
+  pub y_min: Option<OrderedFloat<f64>>,
+  pub y_max: Option<OrderedFloat<f64>>,
+  pub fraction_digits: Option<i32>,
+  pub series: Option<Vec<SeriesSkeleton>>,
+}
+
+impl ChartSkeleton {
+  pub fn new<F1, F2, F3, F4, F5, F6, F7, F8>(id: F1, title: F2, unit: F3, kind: F4, y_min: F5, y_max: F6, fraction_digits: F7, series: F8) -> ChartSkeleton where F1: Into<Option<String>>, F2: Into<Option<String>>, F3: Into<Option<String>>, F4: Into<Option<ChartKind>>, F5: Into<Option<OrderedFloat<f64>>>, F6: Into<Option<OrderedFloat<f64>>>, F7: Into<Option<i32>>, F8: Into<Option<Vec<SeriesSkeleton>>> {
+    ChartSkeleton {
+      id: id.into(),
+      title: title.into(),
+      unit: unit.into(),
+      kind: kind.into(),
+      y_min: y_min.into(),
+      y_max: y_max.into(),
+      fraction_digits: fraction_digits.into(),
+      series: series.into(),
+    }
+  }
+}
+
+impl TSerializable for ChartSkeleton {
+  fn read_from_in_protocol(i_prot: &mut dyn TInputProtocol) -> thrift::Result<ChartSkeleton> {
+    i_prot.read_struct_begin()?;
+    let mut f_1: Option<String> = Some("".to_owned());
+    let mut f_2: Option<String> = Some("".to_owned());
+    let mut f_3: Option<String> = None;
+    let mut f_4: Option<ChartKind> = None;
+    let mut f_5: Option<OrderedFloat<f64>> = None;
+    let mut f_6: Option<OrderedFloat<f64>> = None;
+    let mut f_7: Option<i32> = None;
+    let mut f_8: Option<Vec<SeriesSkeleton>> = Some(Vec::new());
+    loop {
+      let field_ident = i_prot.read_field_begin()?;
+      if field_ident.field_type == TType::Stop {
+        break;
+      }
+      let field_id = field_id(&field_ident)?;
+      match field_id {
+        1 => {
+          let val = i_prot.read_string()?;
+          f_1 = Some(val);
+        },
+        2 => {
+          let val = i_prot.read_string()?;
+          f_2 = Some(val);
+        },
+        3 => {
+          let val = i_prot.read_string()?;
+          f_3 = Some(val);
+        },
+        4 => {
+          let val = ChartKind::read_from_in_protocol(i_prot)?;
+          f_4 = Some(val);
+        },
+        5 => {
+          let val = OrderedFloat::from(i_prot.read_double()?);
+          f_5 = Some(val);
+        },
+        6 => {
+          let val = OrderedFloat::from(i_prot.read_double()?);
+          f_6 = Some(val);
+        },
+        7 => {
+          let val = i_prot.read_i32()?;
+          f_7 = Some(val);
+        },
+        8 => {
+          let list_ident = i_prot.read_list_begin()?;
+          let mut val: Vec<SeriesSkeleton> = Vec::with_capacity(list_ident.size as usize);
+          for _ in 0..list_ident.size {
+            let list_elem_6 = SeriesSkeleton::read_from_in_protocol(i_prot)?;
+            val.push(list_elem_6);
+          }
+          i_prot.read_list_end()?;
+          f_8 = Some(val);
+        },
+        _ => {
+          i_prot.skip(field_ident.field_type)?;
+        },
+      };
+      i_prot.read_field_end()?;
+    }
+    i_prot.read_struct_end()?;
+    let ret = ChartSkeleton {
+      id: f_1,
+      title: f_2,
+      unit: f_3,
+      kind: f_4,
+      y_min: f_5,
+      y_max: f_6,
+      fraction_digits: f_7,
+      series: f_8,
+    };
+    Ok(ret)
+  }
+  fn write_to_out_protocol(&self, o_prot: &mut dyn TOutputProtocol) -> thrift::Result<()> {
+    let struct_ident = TStructIdentifier::new("ChartSkeleton");
+    o_prot.write_struct_begin(&struct_ident)?;
+    if let Some(ref fld_var) = self.id {
+      o_prot.write_field_begin(&TFieldIdentifier::new("id", TType::String, 1))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.title {
+      o_prot.write_field_begin(&TFieldIdentifier::new("title", TType::String, 2))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.unit {
+      o_prot.write_field_begin(&TFieldIdentifier::new("unit", TType::String, 3))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.kind {
+      o_prot.write_field_begin(&TFieldIdentifier::new("kind", TType::I32, 4))?;
+      fld_var.write_to_out_protocol(o_prot)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(fld_var) = self.y_min {
+      o_prot.write_field_begin(&TFieldIdentifier::new("yMin", TType::Double, 5))?;
+      o_prot.write_double(fld_var.into())?;
+      o_prot.write_field_end()?
+    }
+    if let Some(fld_var) = self.y_max {
+      o_prot.write_field_begin(&TFieldIdentifier::new("yMax", TType::Double, 6))?;
+      o_prot.write_double(fld_var.into())?;
+      o_prot.write_field_end()?
+    }
+    if let Some(fld_var) = self.fraction_digits {
+      o_prot.write_field_begin(&TFieldIdentifier::new("fractionDigits", TType::I32, 7))?;
+      o_prot.write_i32(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.series {
+      o_prot.write_field_begin(&TFieldIdentifier::new("series", TType::List, 8))?;
+      o_prot.write_list_begin(&TListIdentifier::new(TType::Struct, fld_var.len() as i32))?;
+      for e in fld_var {
+        e.write_to_out_protocol(o_prot)?;
+      }
+      o_prot.write_list_end()?;
+      o_prot.write_field_end()?
+    }
+    o_prot.write_field_stop()?;
+    o_prot.write_struct_end()
+  }
+}
+
+//
+// DashboardSkeleton
+//
+
+#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct DashboardSkeleton {
+  pub aquarium_id: Option<String>,
+  pub tiles: Option<Vec<TileSkeleton>>,
+  pub charts: Option<Vec<ChartSkeleton>>,
+}
+
+impl DashboardSkeleton {
+  pub fn new<F1, F2, F3>(aquarium_id: F1, tiles: F2, charts: F3) -> DashboardSkeleton where F1: Into<Option<String>>, F2: Into<Option<Vec<TileSkeleton>>>, F3: Into<Option<Vec<ChartSkeleton>>> {
+    DashboardSkeleton {
+      aquarium_id: aquarium_id.into(),
+      tiles: tiles.into(),
+      charts: charts.into(),
+    }
+  }
+}
+
+impl TSerializable for DashboardSkeleton {
+  fn read_from_in_protocol(i_prot: &mut dyn TInputProtocol) -> thrift::Result<DashboardSkeleton> {
+    i_prot.read_struct_begin()?;
+    let mut f_1: Option<String> = Some("".to_owned());
+    let mut f_2: Option<Vec<TileSkeleton>> = Some(Vec::new());
+    let mut f_3: Option<Vec<ChartSkeleton>> = Some(Vec::new());
+    loop {
+      let field_ident = i_prot.read_field_begin()?;
+      if field_ident.field_type == TType::Stop {
+        break;
+      }
+      let field_id = field_id(&field_ident)?;
+      match field_id {
+        1 => {
+          let val = i_prot.read_string()?;
+          f_1 = Some(val);
+        },
+        2 => {
+          let list_ident = i_prot.read_list_begin()?;
+          let mut val: Vec<TileSkeleton> = Vec::with_capacity(list_ident.size as usize);
+          for _ in 0..list_ident.size {
+            let list_elem_7 = TileSkeleton::read_from_in_protocol(i_prot)?;
+            val.push(list_elem_7);
+          }
+          i_prot.read_list_end()?;
+          f_2 = Some(val);
+        },
+        3 => {
+          let list_ident = i_prot.read_list_begin()?;
+          let mut val: Vec<ChartSkeleton> = Vec::with_capacity(list_ident.size as usize);
+          for _ in 0..list_ident.size {
+            let list_elem_8 = ChartSkeleton::read_from_in_protocol(i_prot)?;
+            val.push(list_elem_8);
+          }
+          i_prot.read_list_end()?;
+          f_3 = Some(val);
+        },
+        _ => {
+          i_prot.skip(field_ident.field_type)?;
+        },
+      };
+      i_prot.read_field_end()?;
+    }
+    i_prot.read_struct_end()?;
+    let ret = DashboardSkeleton {
+      aquarium_id: f_1,
+      tiles: f_2,
+      charts: f_3,
+    };
+    Ok(ret)
+  }
+  fn write_to_out_protocol(&self, o_prot: &mut dyn TOutputProtocol) -> thrift::Result<()> {
+    let struct_ident = TStructIdentifier::new("DashboardSkeleton");
+    o_prot.write_struct_begin(&struct_ident)?;
+    if let Some(ref fld_var) = self.aquarium_id {
+      o_prot.write_field_begin(&TFieldIdentifier::new("aquariumId", TType::String, 1))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.tiles {
+      o_prot.write_field_begin(&TFieldIdentifier::new("tiles", TType::List, 2))?;
+      o_prot.write_list_begin(&TListIdentifier::new(TType::Struct, fld_var.len() as i32))?;
+      for e in fld_var {
+        e.write_to_out_protocol(o_prot)?;
+      }
+      o_prot.write_list_end()?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.charts {
+      o_prot.write_field_begin(&TFieldIdentifier::new("charts", TType::List, 3))?;
+      o_prot.write_list_begin(&TListIdentifier::new(TType::Struct, fld_var.len() as i32))?;
+      for e in fld_var {
+        e.write_to_out_protocol(o_prot)?;
+      }
+      o_prot.write_list_end()?;
+      o_prot.write_field_end()?
+    }
+    o_prot.write_field_stop()?;
+    o_prot.write_struct_end()
+  }
+}
+
+//
+// TileUpdate
+//
+
+#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct TileUpdate {
+  pub id: Option<String>,
+  pub value: Option<OrderedFloat<f64>>,
+}
+
+impl TileUpdate {
+  pub fn new<F1, F2>(id: F1, value: F2) -> TileUpdate where F1: Into<Option<String>>, F2: Into<Option<OrderedFloat<f64>>> {
+    TileUpdate {
+      id: id.into(),
+      value: value.into(),
+    }
+  }
+}
+
+impl TSerializable for TileUpdate {
+  fn read_from_in_protocol(i_prot: &mut dyn TInputProtocol) -> thrift::Result<TileUpdate> {
+    i_prot.read_struct_begin()?;
+    let mut f_1: Option<String> = Some("".to_owned());
+    let mut f_2: Option<OrderedFloat<f64>> = None;
+    loop {
+      let field_ident = i_prot.read_field_begin()?;
+      if field_ident.field_type == TType::Stop {
+        break;
+      }
+      let field_id = field_id(&field_ident)?;
+      match field_id {
+        1 => {
+          let val = i_prot.read_string()?;
+          f_1 = Some(val);
+        },
+        2 => {
+          let val = OrderedFloat::from(i_prot.read_double()?);
+          f_2 = Some(val);
+        },
+        _ => {
+          i_prot.skip(field_ident.field_type)?;
+        },
+      };
+      i_prot.read_field_end()?;
+    }
+    i_prot.read_struct_end()?;
+    let ret = TileUpdate {
+      id: f_1,
+      value: f_2,
+    };
+    Ok(ret)
+  }
+  fn write_to_out_protocol(&self, o_prot: &mut dyn TOutputProtocol) -> thrift::Result<()> {
+    let struct_ident = TStructIdentifier::new("TileUpdate");
+    o_prot.write_struct_begin(&struct_ident)?;
+    if let Some(ref fld_var) = self.id {
+      o_prot.write_field_begin(&TFieldIdentifier::new("id", TType::String, 1))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(fld_var) = self.value {
+      o_prot.write_field_begin(&TFieldIdentifier::new("value", TType::Double, 2))?;
+      o_prot.write_double(fld_var.into())?;
+      o_prot.write_field_end()?
+    }
+    o_prot.write_field_stop()?;
+    o_prot.write_struct_end()
+  }
+}
+
+//
+// SeriesUpdate
+//
+
+#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct SeriesUpdate {
+  pub id: Option<String>,
+  pub points: Option<Vec<SDPoint>>,
+}
+
+impl SeriesUpdate {
+  pub fn new<F1, F2>(id: F1, points: F2) -> SeriesUpdate where F1: Into<Option<String>>, F2: Into<Option<Vec<SDPoint>>> {
+    SeriesUpdate {
+      id: id.into(),
+      points: points.into(),
+    }
+  }
+}
+
+impl TSerializable for SeriesUpdate {
+  fn read_from_in_protocol(i_prot: &mut dyn TInputProtocol) -> thrift::Result<SeriesUpdate> {
+    i_prot.read_struct_begin()?;
+    let mut f_1: Option<String> = Some("".to_owned());
+    let mut f_2: Option<Vec<SDPoint>> = Some(Vec::new());
+    loop {
+      let field_ident = i_prot.read_field_begin()?;
+      if field_ident.field_type == TType::Stop {
+        break;
+      }
+      let field_id = field_id(&field_ident)?;
+      match field_id {
+        1 => {
+          let val = i_prot.read_string()?;
+          f_1 = Some(val);
+        },
+        2 => {
+          let list_ident = i_prot.read_list_begin()?;
+          let mut val: Vec<SDPoint> = Vec::with_capacity(list_ident.size as usize);
+          for _ in 0..list_ident.size {
+            let list_elem_9 = SDPoint::read_from_in_protocol(i_prot)?;
+            val.push(list_elem_9);
+          }
+          i_prot.read_list_end()?;
+          f_2 = Some(val);
+        },
+        _ => {
+          i_prot.skip(field_ident.field_type)?;
+        },
+      };
+      i_prot.read_field_end()?;
+    }
+    i_prot.read_struct_end()?;
+    let ret = SeriesUpdate {
+      id: f_1,
+      points: f_2,
+    };
+    Ok(ret)
+  }
+  fn write_to_out_protocol(&self, o_prot: &mut dyn TOutputProtocol) -> thrift::Result<()> {
+    let struct_ident = TStructIdentifier::new("SeriesUpdate");
+    o_prot.write_struct_begin(&struct_ident)?;
+    if let Some(ref fld_var) = self.id {
+      o_prot.write_field_begin(&TFieldIdentifier::new("id", TType::String, 1))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.points {
+      o_prot.write_field_begin(&TFieldIdentifier::new("points", TType::List, 2))?;
+      o_prot.write_list_begin(&TListIdentifier::new(TType::Struct, fld_var.len() as i32))?;
+      for e in fld_var {
+        e.write_to_out_protocol(o_prot)?;
+      }
+      o_prot.write_list_end()?;
+      o_prot.write_field_end()?
+    }
+    o_prot.write_field_stop()?;
+    o_prot.write_struct_end()
+  }
+}
+
+//
+// ChartUpdate
+//
+
+#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct ChartUpdate {
+  pub id: Option<String>,
+  pub series: Option<Vec<SeriesUpdate>>,
+}
+
+impl ChartUpdate {
+  pub fn new<F1, F2>(id: F1, series: F2) -> ChartUpdate where F1: Into<Option<String>>, F2: Into<Option<Vec<SeriesUpdate>>> {
+    ChartUpdate {
+      id: id.into(),
+      series: series.into(),
+    }
+  }
+}
+
+impl TSerializable for ChartUpdate {
+  fn read_from_in_protocol(i_prot: &mut dyn TInputProtocol) -> thrift::Result<ChartUpdate> {
+    i_prot.read_struct_begin()?;
+    let mut f_1: Option<String> = Some("".to_owned());
+    let mut f_2: Option<Vec<SeriesUpdate>> = Some(Vec::new());
+    loop {
+      let field_ident = i_prot.read_field_begin()?;
+      if field_ident.field_type == TType::Stop {
+        break;
+      }
+      let field_id = field_id(&field_ident)?;
+      match field_id {
+        1 => {
+          let val = i_prot.read_string()?;
+          f_1 = Some(val);
+        },
+        2 => {
+          let list_ident = i_prot.read_list_begin()?;
+          let mut val: Vec<SeriesUpdate> = Vec::with_capacity(list_ident.size as usize);
+          for _ in 0..list_ident.size {
+            let list_elem_10 = SeriesUpdate::read_from_in_protocol(i_prot)?;
+            val.push(list_elem_10);
+          }
+          i_prot.read_list_end()?;
+          f_2 = Some(val);
+        },
+        _ => {
+          i_prot.skip(field_ident.field_type)?;
+        },
+      };
+      i_prot.read_field_end()?;
+    }
+    i_prot.read_struct_end()?;
+    let ret = ChartUpdate {
+      id: f_1,
+      series: f_2,
+    };
+    Ok(ret)
+  }
+  fn write_to_out_protocol(&self, o_prot: &mut dyn TOutputProtocol) -> thrift::Result<()> {
+    let struct_ident = TStructIdentifier::new("ChartUpdate");
+    o_prot.write_struct_begin(&struct_ident)?;
+    if let Some(ref fld_var) = self.id {
+      o_prot.write_field_begin(&TFieldIdentifier::new("id", TType::String, 1))?;
+      o_prot.write_string(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.series {
+      o_prot.write_field_begin(&TFieldIdentifier::new("series", TType::List, 2))?;
+      o_prot.write_list_begin(&TListIdentifier::new(TType::Struct, fld_var.len() as i32))?;
+      for e in fld_var {
+        e.write_to_out_protocol(o_prot)?;
+      }
+      o_prot.write_list_end()?;
+      o_prot.write_field_end()?
+    }
+    o_prot.write_field_stop()?;
+    o_prot.write_struct_end()
+  }
+}
+
+//
+// CompletionEvent
+//
+
+#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct CompletionEvent {
+  pub total_widgets: Option<i32>,
+  pub duration_ms: Option<i64>,
+}
+
+impl CompletionEvent {
+  pub fn new<F1, F2>(total_widgets: F1, duration_ms: F2) -> CompletionEvent where F1: Into<Option<i32>>, F2: Into<Option<i64>> {
+    CompletionEvent {
+      total_widgets: total_widgets.into(),
+      duration_ms: duration_ms.into(),
+    }
+  }
+}
+
+impl TSerializable for CompletionEvent {
+  fn read_from_in_protocol(i_prot: &mut dyn TInputProtocol) -> thrift::Result<CompletionEvent> {
+    i_prot.read_struct_begin()?;
+    let mut f_1: Option<i32> = Some(0);
+    let mut f_2: Option<i64> = Some(0);
+    loop {
+      let field_ident = i_prot.read_field_begin()?;
+      if field_ident.field_type == TType::Stop {
+        break;
+      }
+      let field_id = field_id(&field_ident)?;
+      match field_id {
+        1 => {
+          let val = i_prot.read_i32()?;
+          f_1 = Some(val);
+        },
+        2 => {
+          let val = i_prot.read_i64()?;
+          f_2 = Some(val);
+        },
+        _ => {
+          i_prot.skip(field_ident.field_type)?;
+        },
+      };
+      i_prot.read_field_end()?;
+    }
+    i_prot.read_struct_end()?;
+    let ret = CompletionEvent {
+      total_widgets: f_1,
+      duration_ms: f_2,
+    };
+    Ok(ret)
+  }
+  fn write_to_out_protocol(&self, o_prot: &mut dyn TOutputProtocol) -> thrift::Result<()> {
+    let struct_ident = TStructIdentifier::new("CompletionEvent");
+    o_prot.write_struct_begin(&struct_ident)?;
+    if let Some(fld_var) = self.total_widgets {
+      o_prot.write_field_begin(&TFieldIdentifier::new("totalWidgets", TType::I32, 1))?;
+      o_prot.write_i32(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(fld_var) = self.duration_ms {
+      o_prot.write_field_begin(&TFieldIdentifier::new("durationMs", TType::I64, 2))?;
+      o_prot.write_i64(fld_var)?;
+      o_prot.write_field_end()?
+    }
+    o_prot.write_field_stop()?;
+    o_prot.write_struct_end()
+  }
+}
+
+//
+// StreamMessage
+//
+
+#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct StreamMessage {
+  pub type_: Option<StreamMessageType>,
+  pub skeleton: Option<DashboardSkeleton>,
+  pub tile_update: Option<TileUpdate>,
+  pub chart_update: Option<ChartUpdate>,
+  pub complete: Option<CompletionEvent>,
+}
+
+impl StreamMessage {
+  pub fn new<F1, F2, F3, F4, F5>(type_: F1, skeleton: F2, tile_update: F3, chart_update: F4, complete: F5) -> StreamMessage where F1: Into<Option<StreamMessageType>>, F2: Into<Option<DashboardSkeleton>>, F3: Into<Option<TileUpdate>>, F4: Into<Option<ChartUpdate>>, F5: Into<Option<CompletionEvent>> {
+    StreamMessage {
+      type_: type_.into(),
+      skeleton: skeleton.into(),
+      tile_update: tile_update.into(),
+      chart_update: chart_update.into(),
+      complete: complete.into(),
+    }
+  }
+}
+
+impl TSerializable for StreamMessage {
+  fn read_from_in_protocol(i_prot: &mut dyn TInputProtocol) -> thrift::Result<StreamMessage> {
+    i_prot.read_struct_begin()?;
+    let mut f_1: Option<StreamMessageType> = None;
+    let mut f_2: Option<DashboardSkeleton> = None;
+    let mut f_3: Option<TileUpdate> = None;
+    let mut f_4: Option<ChartUpdate> = None;
+    let mut f_5: Option<CompletionEvent> = None;
+    loop {
+      let field_ident = i_prot.read_field_begin()?;
+      if field_ident.field_type == TType::Stop {
+        break;
+      }
+      let field_id = field_id(&field_ident)?;
+      match field_id {
+        1 => {
+          let val = StreamMessageType::read_from_in_protocol(i_prot)?;
+          f_1 = Some(val);
+        },
+        2 => {
+          let val = DashboardSkeleton::read_from_in_protocol(i_prot)?;
+          f_2 = Some(val);
+        },
+        3 => {
+          let val = TileUpdate::read_from_in_protocol(i_prot)?;
+          f_3 = Some(val);
+        },
+        4 => {
+          let val = ChartUpdate::read_from_in_protocol(i_prot)?;
+          f_4 = Some(val);
+        },
+        5 => {
+          let val = CompletionEvent::read_from_in_protocol(i_prot)?;
+          f_5 = Some(val);
+        },
+        _ => {
+          i_prot.skip(field_ident.field_type)?;
+        },
+      };
+      i_prot.read_field_end()?;
+    }
+    i_prot.read_struct_end()?;
+    let ret = StreamMessage {
+      type_: f_1,
+      skeleton: f_2,
+      tile_update: f_3,
+      chart_update: f_4,
+      complete: f_5,
+    };
+    Ok(ret)
+  }
+  fn write_to_out_protocol(&self, o_prot: &mut dyn TOutputProtocol) -> thrift::Result<()> {
+    let struct_ident = TStructIdentifier::new("StreamMessage");
+    o_prot.write_struct_begin(&struct_ident)?;
+    if let Some(ref fld_var) = self.type_ {
+      o_prot.write_field_begin(&TFieldIdentifier::new("type", TType::I32, 1))?;
+      fld_var.write_to_out_protocol(o_prot)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.skeleton {
+      o_prot.write_field_begin(&TFieldIdentifier::new("skeleton", TType::Struct, 2))?;
+      fld_var.write_to_out_protocol(o_prot)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.tile_update {
+      o_prot.write_field_begin(&TFieldIdentifier::new("tileUpdate", TType::Struct, 3))?;
+      fld_var.write_to_out_protocol(o_prot)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.chart_update {
+      o_prot.write_field_begin(&TFieldIdentifier::new("chartUpdate", TType::Struct, 4))?;
+      fld_var.write_to_out_protocol(o_prot)?;
+      o_prot.write_field_end()?
+    }
+    if let Some(ref fld_var) = self.complete {
+      o_prot.write_field_begin(&TFieldIdentifier::new("complete", TType::Struct, 5))?;
+      fld_var.write_to_out_protocol(o_prot)?;
+      o_prot.write_field_end()?
+    }
+    o_prot.write_field_stop()?;
+    o_prot.write_struct_end()
+  }
+}
+
+//
 // TelemetryService service client
 //
 
@@ -1113,8 +2019,8 @@ impl TelemetryServiceAquariumsResult {
           let list_ident = i_prot.read_list_begin()?;
           let mut val: Vec<SDAquarium> = Vec::with_capacity(list_ident.size as usize);
           for _ in 0..list_ident.size {
-            let list_elem_6 = SDAquarium::read_from_in_protocol(i_prot)?;
-            val.push(list_elem_6);
+            let list_elem_11 = SDAquarium::read_from_in_protocol(i_prot)?;
+            val.push(list_elem_11);
           }
           i_prot.read_list_end()?;
           f_0 = Some(val);

@@ -1,1 +1,0 @@
-/Users/senthilkumarv/Projects/aquarium-telemetry-idl/generated/rust/target/release/libtelemetry_thrift.rlib: /Users/senthilkumarv/Projects/aquarium-telemetry-idl/generated/rust/src/lib.rs /Users/senthilkumarv/Projects/aquarium-telemetry-idl/generated/rust/src/telemetry.rs
