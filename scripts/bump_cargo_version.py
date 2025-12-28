@@ -1,34 +1,59 @@
 #\!/usr/bin/env python3
-import io, os, re, sys
+import sys, re
+from pathlib import Path
 
-if len(sys.argv) < 2:
-    print("usage: bump_cargo_version.py <version>", file=sys.stderr)
-    sys.exit(1)
-ver = sys.argv[1].strip()
-path = os.path.join(packages,rust,Cargo.toml)
-try:
-    text = io.open(path, r, encoding=utf-8).read()
-except FileNotFoundError:
-    # Nothing to bump; not an error in CI
-    sys.exit(0)
+def main():
+    if len(sys.argv) < 2:
+        print('usage: bump_cargo_version.py <version>', file=sys.stderr)
+        sys.exit(1)
+    ver = sys.argv[1].strip()
 
-lines = text.splitlines()
-out = []
-in_pkg = False
-re_pkg_start = re.compile(r"^\s*\[package\]\s*$")
-re_section = re.compile(r"^\s*\[.*\]\s*$")
-re_version = re.compile(r"^\s*version\s*=\s*\".*\"\s*$")
+    # Repo root = scripts/.. ; target Cargo.toml is packages/rust/Cargo.toml
+    root = Path(__file__).resolve().parents[1]
+    cargo = root / 'packages' / 'rust' / 'Cargo.toml'
 
-for line in lines:
-    if re_pkg_start.match(line):
-        in_pkg = True
+    if not cargo.exists():
+        # Nothing to bump; not an error in CI
+        return 0
+
+    lines = cargo.read_text(encoding='utf-8').splitlines()
+
+    out = []
+    in_pkg = False
+    changed = False
+    re_pkg_start = re.compile(r'^\s*\[package\]\s*$')
+    re_section = re.compile(r'^\s*\[.*\]\s*$')
+    re_version = re.compile(r'^(\s*)version\s*=\s*".*"\s*$')
+
+    for line in lines:
+        if re_pkg_start.match(line):
+            in_pkg = True
+            out.append(line)
+            continue
+        if in_pkg and re_section.match(line):
+            in_pkg = False
+        if in_pkg:
+            m = re_version.match(line)
+            if m:
+                indent = m.group(1)
+                out.append(f'{indent}version = "{ver}"')
+                changed = True
+                continue
         out.append(line)
-        continue
-    if in_pkg and re_section.match(line):
-        in_pkg = False
-    if in_pkg and re_version.match(line):
-        out.append(f"version = \"{ver}\"")
-    else:
-        out.append(line)
 
-io.open(path, w, encoding=utf-8).write("\n".join(out) + "\n")
+    if not changed:
+        # If no version line was found in [package], try inserting after [package]
+        out2 = []
+        inserted = False
+        for i, line in enumerate(out):
+            out2.append(line)
+            if not inserted and re_pkg_start.match(line):
+                out2.append(f'version = "{ver}"')
+                inserted = True
+        out = out2
+
+    cargo.write_text('\n'.join(out) + '\n', encoding='utf-8')
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
