@@ -101,8 +101,8 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Add packages to staging (but don't commit to main)
-          git add packages/
+          # Add packages to staging (force add since it's in .gitignore)
+          git add -f packages/
 
           # Create a tree object with packages included
           TREE=$(git write-tree)
@@ -130,7 +130,7 @@ jobs:
             python3 scripts/bump_cargo_version.py "$NEXT_VERSION"
 
             # Recreate the tree and commit with new version
-            git add packages/
+            git add -f packages/
             TREE=$(git write-tree)
             TAG_COMMIT=$(git commit-tree $TREE -p HEAD -m "chore(release): v$NEXT_VERSION - generated packages")
           fi
