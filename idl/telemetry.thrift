@@ -28,7 +28,8 @@ enum StreamMessageType {
 // Widget skeleton metadata (no data, just structure)
 struct TileSkeleton { 1: string id, 2: string title, 3: optional string unit, 4: optional i32 precision }
 struct SeriesSkeleton { 1: string id, 2: string name, 3: optional string color }
-struct ChartSkeleton { 1: string id, 2: string title, 3: optional string unit, 4: ChartKind kind, 5: optional double yMin, 6: optional double yMax, 7: optional i32 fractionDigits, 8: list<SeriesSkeleton> series }
+struct OverlaySkeleton { 1: string id, 2: string name, 3: optional string color }
+struct ChartSkeleton { 1: string id, 2: string title, 3: optional string unit, 4: ChartKind kind, 5: optional double yMin, 6: optional double yMax, 7: optional i32 fractionDigits, 8: list<SeriesSkeleton> series, 9: optional list<OverlaySkeleton> overlays }
 
 struct DashboardSkeleton {
   1: string aquariumId,
@@ -39,7 +40,8 @@ struct DashboardSkeleton {
 // Progressive data updates
 struct TileUpdate { 1: string id, 2: optional double value }
 struct SeriesUpdate { 1: string id, 2: list<SDPoint> points }
-struct ChartUpdate { 1: string id, 2: list<SeriesUpdate> series }
+struct OverlayUpdate { 1: string id, 2: list<SDPoint> points }
+struct ChartUpdate { 1: string id, 2: list<SeriesUpdate> series, 3: optional list<OverlayUpdate> overlays }
 struct CompletionEvent { 1: i32 totalWidgets, 2: i64 durationMs }
 
 // Streaming message wrapper
