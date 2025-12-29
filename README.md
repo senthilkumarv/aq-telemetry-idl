@@ -1,4 +1,4 @@
-# Aquarium Telemetry IDL (Thrift)
+# Aquarium Telemetry IDL
 
 Shared Thrift IDL and generated packages for Rust and Swift.
 
